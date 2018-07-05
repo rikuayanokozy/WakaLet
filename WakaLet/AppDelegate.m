@@ -27,9 +27,29 @@
     [self checkAPIAndBuildMenu];
 }
 
+-(NSString*) getApiKey {
+    NSString *api_key = [[NSUserDefaults standardUserDefaults] valueForKey:@"api_key"];
+    if (api_key != nil) {
+        return api_key;
+    }
+    NSString* configFilePath = [NSString stringWithFormat:@"/Users/%@/.wakatime.cfg", NSUserName()];
+    NSError* err;
+    NSString* config = [NSString stringWithContentsOfFile:configFilePath encoding:NSUTF8StringEncoding error:&err];
+    if (err == nil) {
+        NSRegularExpression* regex = [NSRegularExpression regularExpressionWithPattern:@"api_key ?= ?(.+)"
+                                                                               options:NSRegularExpressionCaseInsensitive
+                                                                                 error:&err];
+        NSArray<NSTextCheckingResult*>* matches = [regex matchesInString:config options:0 range:NSMakeRange(0, [config length])];
+        if ([matches count] > 0) {
+            return [config substringWithRange:[matches[0] rangeAtIndex:1]];
+        }
+    }
+    return nil;
+}
+
 -(void)checkAPIAndBuildMenu{
     // Get the manually set API key
-    NSString *api_key = [[NSUserDefaults standardUserDefaults] valueForKey:@"api_key"];
+    NSString *api_key = [self getApiKey];
     
     // If there is no key though, just show the add-API-key entry
     if( api_key == nil ){
